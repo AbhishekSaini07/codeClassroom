@@ -1,17 +1,13 @@
-const mongoose = require("mongoose")
+// db.js
 
+const mongoose = require('mongoose');
 
+mongoose.connect('mongodb+srv://AbhishekDb:Abhishek@cluster0.bm2nmnb.mongodb.net/codeclassroom', { useNewUrlParser: true, useUnifiedTopology: true });
+const db = mongoose.connection;
 
-const db = async()=>
-{
-    try{
-        const con = await mongoose.connect('mongodb+srv://AbhishekDb:Abhishek@cluster0.bm2nmnb.mongodb.net/')
-        console.log(`mongodb connected: ${con.connection.host}`)
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', () => {
+  console.log('Connected to MongoDB');
+});
 
-    } catch(error){
-        console.error(error);
-    }
-    
-
-}
-module.exports = db
+module.exports = mongoose;
