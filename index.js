@@ -177,7 +177,7 @@ app.post('/login', async (req, res) => {
     res.json({ success: false, error: 'An error occurred during login' });
   }
 });
-app.get('/questions', async (req, res) => {
+app.get('/home', async (req, res) => {
   
   try {
     const questions = await Question.find();
