@@ -17,6 +17,9 @@ app.use(session({
   secret: "mysecret",
   resave: true,
 saveUninitialized: true,
+cookie : {
+  maxAge:(1000 * 60 * 100)
+}     ,
   store: MongoStore.create({
     mongoUrl: 'mongodb+srv://AbhishekDb:Abhishek@cluster0.bm2nmnb.mongodb.net/codeclassroom',
    
