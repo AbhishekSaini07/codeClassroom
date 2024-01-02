@@ -15,6 +15,8 @@ app.use(cors()); // Enable CORS for all routes
 app.use(bodyParser.json());
 app.use(session({
   secret: "mysecret",
+  resave: true,
+saveUninitialized: true,
   store: MongoStore.create({
     mongoUrl: 'mongodb+srv://AbhishekDb:Abhishek@cluster0.bm2nmnb.mongodb.net/codeclassroom',
    
