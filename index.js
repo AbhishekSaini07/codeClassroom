@@ -9,13 +9,16 @@ const port = 5000;
 const nodemailer = require('nodemailer');
 const Question = require('./services/schemas/question');
 const session = require('express-session');
-app.use(
-  session({
-    secret: 'your-secret-key', // Replace with a strong secret key
-  })
-);
+const MongoStore = require('connect-mongo');
+
 app.use(cors()); // Enable CORS for all routes
 app.use(bodyParser.json());
+app.use(session({
+  store: MongoStore.create({
+    mongoUrl: 'mongodb+srv://AbhishekDb:Abhishek@cluster0.bm2nmnb.mongodb.net/codeclassroom',
+   
+  })
+}));
 
 // Setup Nodemailer
 const transporter = nodemailer.createTransport({
@@ -25,6 +28,7 @@ const transporter = nodemailer.createTransport({
     pass: 'expg rvfk askj xrzt', // Replace with your Gmail password or an app-specific password
   },
 });
+
 app.get('/someRoute', (req, res) => {
   // Do some server-side logic
 
