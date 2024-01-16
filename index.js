@@ -10,22 +10,44 @@ const nodemailer = require('nodemailer');
 const Question = require('./services/schemas/question');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
+const ejs = require('ejs');
 
-app.use(cors()); // Enable CORS for all routes
+app.use(cors(
+  {origin: 'http://localhost:3000', // Replace with your React app's URL
+credentials: true,})); // Enable CORS for all routes
 app.use(bodyParser.json());
+
+const isAuth = (req, res, next) => {
+  const user = req.session.user;
+
+  if (user) {
+    console.log("auth");
+      next();
+    } else {
+      // Invalid session, destroy it
+      console.log("not auth");
+      req.session.destroy();
+      
+      res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+};
+
 app.use(session({
   secret: "mysecret",
-  resave: true,
-saveUninitialized: true,
-cookie : {
-  maxAge:(1000 * 60 * 100)
-}     ,
-  store: MongoStore.create({
-    mongoUrl: 'mongodb+srv://AbhishekDb:Abhishek@cluster0.bm2nmnb.mongodb.net/codeclassroom',
-   
-  })
-}));
+  resave: false,
+  saveUninitialized: true,  
+  
 
+  cookie: {
+    maxAge: (1000 * 60 * 10),
+    
+  },
+  store: new MongoStore({
+    mongoUrl: 'mongodb+srv://AbhishekDb:Abhishek@cluster0.bm2nmnb.mongodb.net/codeclassroom', // Replace with your actual MongoDB connection string
+    collection: 'sessions',
+    ttl: 1000 * 60* 10, // Time-to-live for sessions in seconds (optional)
+  }),
+}));
 // Setup Nodemailer
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -35,14 +57,29 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+app.use((req, res, next) => {
+  req.session.browserDetails = {
+    userAgent: req.headers['user-agent'],
+    ipAddress: req.ip,
+  };
+  next();
+});
 app.get('/someRoute', (req, res) => {
   // Do some server-side logic
 
   // Redirect to a React route
   res.end('/compiler');
 });
+app.get("/myfile",(req,res) => {
+  console.log("Sending to myfile.ejs");
+  res.render('myfile',{name: "Abhishek", age:19, profile: "Student"});
 
-app.post('/compile', async (req, res) => {
+});
+app.get('/logout',async(req,res)=>{
+  req.session.destroy();
+  res.json({ success: true});
+});
+app.post('/compile',isAuth, async (req, res) => {   // compile code
   const { language, code, input} = req.body;
 
   const options = {
@@ -69,7 +106,7 @@ app.post('/compile', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-app.post('/signup', async (req, res) => {
+app.post('/signup', async (req, res) => {  // signup
   const { name, email, password } = req.body;
 
   try {
@@ -82,7 +119,7 @@ app.post('/signup', async (req, res) => {
     // Create a new user
     const newUser = new User({ name, email, password });
     await newUser.save();
-
+    req.session.user = { email: newUser.email,};
     res.json({ success: true });
   } catch (error) {
     console.error('Error during signup:', error);
@@ -169,16 +206,21 @@ function generateRandomToken() {
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   
+  console.log("Hello");
   try {
     const user = await User.authenticate(email, password);
-
+    
     if (user) {
+     
+      req.session.user = { email: user.email, /* other user data */ };
+      console.log(req.session.user);
       res.json({ success: true, user: { name: user.name, email: user.email } });
-      req.session.email = email; // Store the email in the session
-      console.log(req.session.email);
+     
       
       
     } else {
+      
+
       res.json({ success: false, error: 'Invalid email or password' });
 
     }
@@ -187,22 +229,65 @@ app.post('/login', async (req, res) => {
     res.json({ success: false, error: 'An error occurred during login' });
   }
 });
-app.get('/questions', async (req, res) => {
-  
+// app.get('/questions', isAuth,async (req, res) => {
+//   if(req.session.viewCount){
+//   req.session.viewCount = req.session.viewCount+1;}
+//   else{
+//     req.session.viewCount =1;
+//   }
+//   try {
+//     const questions = await Question.find();
+//     res.json(questions);
+//   } catch (error) {
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
+app.get('/questions', isAuth, async (req, res) => {
   try {
-    const questions = await Question.find();
-    console.log(questions);
+    // Extract search parameters from query string
+    const { difficulty, title, tags } = req.query;
+    console.log(difficulty);
+    console.log(title);
+    console.log(tags);
+
+    const searchCriteria = {};
+
+    // Add search criteria based on parameters
+    if (difficulty) {
+      searchCriteria.difficulty = difficulty;
+      console.log("done");
+      console.log(searchCriteria);
+    }
+
+    if (title) {
+      // Use case-insensitive regex for partial matching
+      searchCriteria.title = new RegExp(title, 'i');
+      console.log(searchCriteria);
+    }
+
+    if (tags) {
+      // If tags is an array, use it directly
+      searchCriteria.tags = tags;
+      console.log(searchCriteria);
+    }
+
+    // Find questions based on search criteria
+    const questions = await Question.find(searchCriteria);
+
     res.json(questions);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-app.get('/questions/:id', async (req, res) => {
-  
+
+app.get('/questions/:id',isAuth, async (req, res) => {
+ 
   const questionId = parseInt(req.params.id);
   try {
     const question = await Question.findOne({ id: questionId });
     if (question) {
+      // console.log(question);
       const formattedQuestion = {
         id: question.id,
         title: question.title,
