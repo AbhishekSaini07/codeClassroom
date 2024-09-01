@@ -14,7 +14,7 @@ const ejs = require('ejs');
 const { system } = require('nodemon/lib/config');
 
 app.use(cors(
-  {origin: 'http://localhost:3000', // Replace with your React app's URL
+  {origin: 'https://codeclassroomapp.vercel.app/', // Replace with your React app's URL
 credentials: true,})); // Enable CORS for all routes
 app.use(bodyParser.json());
 // Mapping of languages to file extensions
