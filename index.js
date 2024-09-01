@@ -169,8 +169,8 @@ app.post('/signup', async (req, res) => {  // signup
     }
 
     // Create a new user
-    const newUser = new User({ name, email, password });
-    await newUser.save();
+    const user = new User({ name, email, password });
+    await user.save();
     //req.session.user = { email: newUser.email,};
     const token = generateToken(user);
 
