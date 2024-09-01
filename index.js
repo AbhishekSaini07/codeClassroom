@@ -12,7 +12,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const ejs = require('ejs');
 const { system } = require('nodemon/lib/config');
-const { generateToken } = require('./services/jwtServices');
+const { generateToken, verifyToken } = require('./services/jwtServices');
 app.set("trust proxy", 1);
 app.use(cors(
   {origin: 'https://codeclassroomapp.vercel.app', // Replace with your React app's URL
@@ -31,20 +31,20 @@ const languageToFileExtension = {
   // Add more languages and their extensions as needed
 };
 
-const isAuth = (req, res, next) => {
-  const user = req.session.user;
+// const isAuth = (req, res, next) => {  //auth using session now disable because we are using jwt
+//   const user = req.session.user;
 
-  if (user) {
-    console.log("auth");
-      next();
-    } else {
-      // Invalid session, destroy it
-      console.log("not auth");
-      req.session.destroy();
+//   if (user) {
+//     console.log("auth");
+//       next();
+//     } else {
+//       // Invalid session, destroy it
+//       console.log("not auth");
+//       req.session.destroy();
       
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-    }
-};
+//       res.status(401).json({ success: false, message: 'Unauthorized' });
+//     }
+// };
 
 app.use(session({
   secret: "mysecret",
@@ -78,17 +78,13 @@ app.use((req, res, next) => {
   };
   next();
 });
-app.get('/someRoute', (req, res) => {
+app.get('/', (req, res) => {
   // Do some server-side logic
 
   // Redirect to a React route
-  res.end('/compiler');
+  res.render("index");
 });
-app.get("/myfile",(req,res) => {
-  console.log("Sending to myfile.ejs");
-  res.render('myfile',{name: "Abhishek", age:19, profile: "Student"});
 
-});
 app.get('/logout',async(req,res)=>{
   req.session.destroy();
   res.json({ success: true});
@@ -174,8 +170,11 @@ app.post('/signup', async (req, res) => {  // signup
     // Create a new user
     const newUser = new User({ name, email, password });
     await newUser.save();
-    req.session.user = { email: newUser.email,};
-    res.json({ success: true });
+    //req.session.user = { email: newUser.email,};
+    const token = generateToken(user);
+
+    res.json({ success: true, token });
+   
   } catch (error) {
     console.error('Error during signup:', error);
     res.json({ success: false, error: 'An error occurred during signup' });
@@ -240,8 +239,8 @@ app.post('/reset-password', async (req, res) => {
       user.resetTokenExpiry = null;
       await user.save();
       console.log("Stage 3");
-      
-      res.json({ success: true, message: 'Password reset successfully' });
+      const token = generateToken(user);    
+      res.json({ success: true, message: 'Password reset successfully' , token});
     } else {
       console.log("Stage false");
       res.json({ success: false, error: 'Invalid or expired reset token' });
