@@ -11,11 +11,24 @@ const Question = require('./services/schemas/question');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const ejs = require('ejs');
+const { system } = require('nodemon/lib/config');
 
 app.use(cors(
   {origin: 'http://localhost:3000', // Replace with your React app's URL
 credentials: true,})); // Enable CORS for all routes
 app.use(bodyParser.json());
+// Mapping of languages to file extensions
+const languageToFileExtension = {
+  python: 'py',
+  javascript: 'js',
+  java: 'java',
+  c: 'c',
+  cpp: 'cpp',
+  ruby: 'rb',
+  go: 'go',
+  php: 'php',
+  // Add more languages and their extensions as needed
+};
 
 const isAuth = (req, res, next) => {
   const user = req.session.user;
@@ -79,9 +92,48 @@ app.get('/logout',async(req,res)=>{
   req.session.destroy();
   res.json({ success: true});
 });
+app.post('/newCompile', isAuth, async (req, res) => { // New compile code endpoint
+  const { language, code, input } = req.body;
+  console.log(language+ "\n code is: "+  code + "\n input is:" + input);
+
+
+  // Determine the file extension based on the language
+  const fileExtension = languageToFileExtension[language] || 'txt'; // Default to 'txt' if the language is not in the mapping
+  const fileName = `index.${fileExtension}`;
+  console.log(fileName);
+
+  const options = {
+    method: 'POST',
+    url: 'https://onecompiler-apis.p.rapidapi.com/api/v1/run',
+    headers: {
+      'x-rapidapi-key': '6ae6c279ecmsh1aaccd21ed7fc67p104f29jsn37ebb2aa65c7',
+      'x-rapidapi-host': 'onecompiler-apis.p.rapidapi.com',
+      'Content-Type': 'application/json'
+    },
+    data: {
+      language: language || 'python', // Defaulting to 'python' if not provided
+      stdin: input || '', // Input provided by the user
+      files: [
+        {
+          name: fileName, // Dynamic file name based on language
+          content: code // User's code
+        }
+      ]
+    }
+  };
+
+  try {
+    const response = await axios.request(options);
+    console.log(response.data.stdout);
+    res.json(response.data.stdout); // Sending the response data back to the client
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 app.post('/compile',isAuth, async (req, res) => {   // compile code
   const { language, code, input} = req.body;
-
+  console.log(code);
   const options = {
     method: 'POST',
     url: 'https://online-code-compiler.p.rapidapi.com/v1/',
@@ -100,9 +152,11 @@ app.post('/compile',isAuth, async (req, res) => {   // compile code
 
   try {
     const response = await axios.request(options);
+    console.log(response);
     res.json(response.data);
   } catch (error) {
     console.error(error);
+    console.log(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
