@@ -13,7 +13,8 @@ const MongoStore = require('connect-mongo');
 const ejs = require('ejs');
 const { system } = require('nodemon/lib/config');
 const { generateToken, verifyToken } = require('./services/jwtServices');
-app.set("trust proxy", 1);
+//app.set("trust proxy", 1);  //for session purpose
+app.set('view engine', 'ejs'); //template engine
 app.use(cors(
   {origin: 'https://codeclassroomapp.vercel.app', // Replace with your React app's URL
 credentials: true,})); // Enable CORS for all routes
@@ -82,14 +83,14 @@ app.get('/', (req, res) => {
   // Do some server-side logic
 
   // Redirect to a React route
-  res.render("index");
+  res.render("view");
 });
 
 app.get('/logout',async(req,res)=>{
   req.session.destroy();
   res.json({ success: true});
 });
-app.post('/newCompile', async (req, res) => { // New compile code endpoint
+app.post('/newCompile', verifyToken,async (req, res) => { // New compile code endpoint
   const { language, code, input } = req.body;
   console.log(language+ "\n code is: "+  code + "\n input is:" + input);
 
@@ -128,7 +129,7 @@ app.post('/newCompile', async (req, res) => { // New compile code endpoint
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-app.post('/compile', async (req, res) => {   // compile code
+app.post('/compile',verifyToken, async (req, res) => {   // old api compiler endpoint
   const { language, code, input} = req.body;
   console.log(code);
   const options = {
@@ -298,7 +299,7 @@ app.post('/login', async (req, res) => {
 //     res.status(500).json({ error: 'Internal Server Error' });
 //   }
 // });
-app.get('/questions', async (req, res) => {
+app.get('/questions',verifyToken, async (req, res) => {
   try {
     // Extract search parameters from query string
     const { difficulty, title, tags } = req.query;
@@ -337,7 +338,7 @@ app.get('/questions', async (req, res) => {
   }
 });
 
-app.get('/questions/:id', async (req, res) => {
+app.get('/questions/:id',verifyToken, async (req, res) => {
  
   const questionId = parseInt(req.params.id);
   try {

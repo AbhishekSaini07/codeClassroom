@@ -31,7 +31,7 @@ const verifyToken = (req, res, next) => {
         // Continue to the next middleware
         next();
     } catch (err) {
-        return res.status(401).json({ error: 'Invalid or expired token' });
+        res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 };
 function decodeToken(token) {
