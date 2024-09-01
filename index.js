@@ -12,7 +12,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const ejs = require('ejs');
 const { system } = require('nodemon/lib/config');
-
+app.set("trust proxy", 1);
 app.use(cors(
   {origin: 'https://codeclassroomapp.vercel.app', // Replace with your React app's URL
 credentials: true,})); // Enable CORS for all routes
