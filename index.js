@@ -131,7 +131,7 @@ app.post('/newCompile', isAuth, async (req, res) => { // New compile code endpoi
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-app.post('/compile',isAuth, async (req, res) => {   // compile code
+app.post('/compile', async (req, res) => {   // compile code
   const { language, code, input} = req.body;
   console.log(code);
   const options = {
@@ -296,7 +296,7 @@ app.post('/login', async (req, res) => {
 //     res.status(500).json({ error: 'Internal Server Error' });
 //   }
 // });
-app.get('/questions', isAuth, async (req, res) => {
+app.get('/questions', async (req, res) => {
   try {
     // Extract search parameters from query string
     const { difficulty, title, tags } = req.query;
@@ -335,7 +335,7 @@ app.get('/questions', isAuth, async (req, res) => {
   }
 });
 
-app.get('/questions/:id',isAuth, async (req, res) => {
+app.get('/questions/:id', async (req, res) => {
  
   const questionId = parseInt(req.params.id);
   try {
