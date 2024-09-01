@@ -10,7 +10,7 @@ function generateToken(user) {
 
 // Function to verify JWT token
 const verifyToken = (req, res, next) => {
-    console.log("Welcome");
+    console.log("token verifying");
     try {
         // Extract the token from the Authorization header
         const authHeader = req.headers.authorization;
@@ -20,19 +20,19 @@ const verifyToken = (req, res, next) => {
         }
         let token = authHeader.split(' ')[1]; // Extracting token after 'Bearer' prefix
         token = token.replace(/"/g, '');
-        console.log(token);
+        //console.log(token);
         // Verify the token using the secret key
         const decoded = jwt.verify(token, secretKey); // Replace 'your_secret_key' with your actual secret key
-        console.log(decoded);
+        //console.log(decoded);
 
         // Attach the user ID and email to the request object for further processing
         req.user = decoded.user;
-        console.log("User details:", req.user);
+        //console.log("User details:", req.user);
         
         // Continue to the next middleware
         next();
     } catch (err) {
-        console.log("nhi hua");
+        //console.log("nhi hua");
         res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 };
