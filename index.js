@@ -3,15 +3,16 @@ const cors = require('cors');
 const axios = require('axios');
 const bodyParser = require('body-parser');
 const mongoose = require('./config/db');
-const User = require('./services/schemas/user');
+const User = require('./schemas/user');
 const app = express();
 const port = 5000;
 const nodemailer = require('nodemailer');
-const Question = require('./services/schemas/question');
+const Question = require('./schemas/question');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const ejs = require('ejs');
 const { system } = require('nodemon/lib/config');
+const { generateToken } = require('./services/jwtServices');
 app.set("trust proxy", 1);
 app.use(cors(
   {origin: 'https://codeclassroomapp.vercel.app', // Replace with your React app's URL
@@ -92,7 +93,7 @@ app.get('/logout',async(req,res)=>{
   req.session.destroy();
   res.json({ success: true});
 });
-app.post('/newCompile', isAuth, async (req, res) => { // New compile code endpoint
+app.post('/newCompile', async (req, res) => { // New compile code endpoint
   const { language, code, input } = req.body;
   console.log(language+ "\n code is: "+  code + "\n input is:" + input);
 
@@ -266,9 +267,11 @@ app.post('/login', async (req, res) => {
     
     if (user) {
      
-      req.session.user = { email: user.email, /* other user data */ };
-      console.log(req.session.user);
-      res.json({ success: true, user: { name: user.name, email: user.email } });
+      // req.session.user = { email: user.email, /* other user data */ };
+      // console.log(req.session.user);
+      const token = generateToken(user);
+
+      res.json({ success: true, token });
      
       
       
