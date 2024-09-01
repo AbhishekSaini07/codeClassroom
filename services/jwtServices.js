@@ -20,6 +20,7 @@ const verifyToken = (req, res, next) => {
         }
         let token = authHeader.split(' ')[1]; // Extracting token after 'Bearer' prefix
         token = token.replace(/"/g, '');
+        console.log(token);
         // Verify the token using the secret key
         const decoded = jwt.verify(token, secretKey); // Replace 'your_secret_key' with your actual secret key
         console.log(decoded);
@@ -31,6 +32,7 @@ const verifyToken = (req, res, next) => {
         // Continue to the next middleware
         next();
     } catch (err) {
+        console.log("nhi hua");
         res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 };
