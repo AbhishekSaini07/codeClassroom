@@ -226,7 +226,7 @@ app.post('/forget-password', async (req, res) => {
     res.json({ success: false, error: 'An error occurred during forget password' });
   }
 });
-app.post('/reset-password', async (req, res) => {
+app.post('/resetPassword', async (req, res) => {
   const { token, newPassword } = req.body;
   //console.log("stage1");
   try {
