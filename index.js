@@ -228,20 +228,19 @@ app.post('/forget-password', async (req, res) => {
 });
 app.post('/reset-password', async (req, res) => {
   const { token, newPassword } = req.body;
-  console.log("stage1");
+  //console.log("stage1");
   try {
     // Find the user by the reset token
     const user = await User.findOne({ resetToken: token, resetTokenExpiry: { $gt: Date.now() } });
-    console.log("Stage 2");
+    //console.log("Stage 2");
     if (user) {
       // Reset the password
       user.password = newPassword;
       user.resetToken = null;
       user.resetTokenExpiry = null;
       await user.save();
-      console.log("Stage 3");
-      const token = generateToken(user);    
-      res.json({ success: true, message: 'Password reset successfully' , token});
+      console.log("Success true");  
+      res.json({success: true, message: 'Password reset successfully'});
     } else {
       console.log("Stage false");
       res.json({ success: false, error: 'Invalid or expired reset token' });
@@ -249,6 +248,7 @@ app.post('/reset-password', async (req, res) => {
   } catch (error) {
     console.error('Error during password reset:', error);
     res.json({ success: false, error: 'An error occurred during password reset' });
+    
   }
 });
 
